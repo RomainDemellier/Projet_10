@@ -129,6 +129,8 @@ public class EmpruntService {
 		
 		logger.info("Début de la méthode prolonger. Prend un argument de type Long : " + empruntId);
 		
+		System.out.println("Test");
+		
 		Emprunt emprunt = this.findById(empruntId);
 		if(!emprunt.getProlonge()) {
 			emprunt.setProlonge(true);
