@@ -12,6 +12,8 @@ public class LivreDTO {
 	
 	private int nbreExemplaires;
 	
+	private Boolean reservable;
+	
 	public LivreDTO() {
 		
 	}
@@ -54,6 +56,15 @@ public class LivreDTO {
 
 	public void setNbreExemplaires(int nbreExemplaires) {
 		this.nbreExemplaires = nbreExemplaires;
+	}
+	
+
+	public Boolean getReservable() {
+		return reservable;
+	}
+
+	public void setReservable(Boolean reservable) {
+		this.reservable = reservable;
 	}
 
 	@Override

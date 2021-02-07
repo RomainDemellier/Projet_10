@@ -48,6 +48,9 @@ public class EmpruntService {
 	@Autowired
 	private UsagerConnecteService usagerConnecteService;
 	
+	@Autowired
+	private ReservationService reservationService;
+	
 	public Emprunt findById(Long id) {
 		
 		logger.info("Début de findById. Argument type Long : " + id);
@@ -114,6 +117,8 @@ public class EmpruntService {
 		
 		emprunt.setActif(false);
 		this.empruntRepository.save(emprunt);
+		
+		this.reservationService.setDateLimitIfReservation(emprunt.getExemplaire().getLivre());
 		
 		logger.info("Fin de la méthode delete. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
 		

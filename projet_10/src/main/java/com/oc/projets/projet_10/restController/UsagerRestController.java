@@ -26,11 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.oc.projets.projet_10.conversion.ConversionEmprunt;
 import com.oc.projets.projet_10.conversion.ConversionUsager;
 import com.oc.projets.projet_10.dto.EmpruntDTO;
+import com.oc.projets.projet_10.dto.ReservationDTO;
 import com.oc.projets.projet_10.dto.UsagerDTO;
 import com.oc.projets.projet_10.dto.UsagerGetDTO;
 import com.oc.projets.projet_10.entity.Emprunt;
 import com.oc.projets.projet_10.entity.Usager;
 import com.oc.projets.projet_10.service.EmpruntService;
+import com.oc.projets.projet_10.service.ReservationService;
 import com.oc.projets.projet_10.service.UsagerConnecteService;
 import com.oc.projets.projet_10.service.UsagerDetails;
 import com.oc.projets.projet_10.service.UsagerService;
@@ -48,6 +50,9 @@ public class UsagerRestController {
 	
 	@Autowired
 	private EmpruntService empruntService;
+
+	@Autowired
+	private ReservationService reservationService;
 	
 	@Autowired
 	private ConversionUsager conversionUsager;
@@ -114,6 +119,13 @@ public class UsagerRestController {
 	public ResponseEntity<List<EmpruntDTO>> getEmprunts(){
 		System.out.println("Size : " + this.empruntService.getEmpruntsUsagerConnecte().size());
 		return ResponseEntity.ok(this.empruntService.getEmpruntsUsagerConnecte());
+	}
+
+	@GetMapping("/reservations")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<List<ReservationDTO>> getReservations(){
+		System.out.println("Size : " + this.empruntService.getEmpruntsUsagerConnecte().size());
+		return ResponseEntity.ok(this.reservationService.getReservationsUsagerConnecte());
 	}
 	
 	@GetMapping("/connecte")

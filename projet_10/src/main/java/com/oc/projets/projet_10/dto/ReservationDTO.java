@@ -1,6 +1,8 @@
 package com.oc.projets.projet_10.dto;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class ReservationDTO implements Serializable {
@@ -11,21 +13,21 @@ public class ReservationDTO implements Serializable {
 
     private UsagerDTO usager;
 
-    private Date date;
+    private LocalDateTime date;
 
-    private Date dateLimit;
+    private LocalDateTime dateLimit;
 
 
     public ReservationDTO() {
     }
 
-    public ReservationDTO(Long id, LivreDTO livre, UsagerDTO usager, Date date, Date dateLimit) {
-        this.id = id;
-        this.livre = livre;
-        this.usager = usager;
-        this.date = date;
-        this.dateLimit = dateLimit;
-    }
+//    public ReservationDTO(Long id, LivreDTO livre, UsagerDTO usager, Date date, Date dateLimit) {
+//        this.id = id;
+//        this.livre = livre;
+//        this.usager = usager;
+//        this.date = date;
+//        this.dateLimit = dateLimit;
+//    }
 
     public Long getId() {
         return this.id;
@@ -51,19 +53,19 @@ public class ReservationDTO implements Serializable {
         this.usager = usager;
     }
 
-    public Date getDate() {
+    public LocalDateTime getDate() {
         return this.date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
-    public Date getDateLimit() {
+    public LocalDateTime getDateLimit() {
         return this.dateLimit;
     }
 
-    public void setDateLimit(Date dateLimit) {
+    public void setDateLimit(LocalDateTime dateLimit) {
         this.dateLimit = dateLimit;
     }
 } 

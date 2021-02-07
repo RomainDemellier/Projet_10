@@ -2,6 +2,7 @@ package com.oc.projets.projet_10.entity;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.persistence.CascadeType;
@@ -40,16 +41,18 @@ public class Reservation implements Serializable {
     @JoinColumn(name = "usager_id", nullable = false)
     private Usager usager;
 
-    private LocalDate date;
+    private LocalDateTime date;
 
-    private LocalDate dateLimit;
+    private LocalDateTime dateLimit;
+
+    private Boolean actif;
 
     public Reservation(){
         super();
     }
 
 
-    public Reservation(Long id, Livre livre, Usager usager, LocalDate date, LocalDate dateLimit) {
+    public Reservation(Long id, Livre livre, Usager usager, LocalDateTime date, LocalDateTime dateLimit) {
         this.id = id;
         this.livre = livre;
         this.usager = usager;
@@ -81,19 +84,19 @@ public class Reservation implements Serializable {
         this.usager = usager;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return this.date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
-    public LocalDate getDateLimit() {
+    public LocalDateTime getDateLimit() {
         return this.dateLimit;
     }
 
-    public void setDateLimit(LocalDate dateLimit) {
+    public void setDateLimit(LocalDateTime dateLimit) {
         this.dateLimit = dateLimit;
     }
 
@@ -112,15 +115,30 @@ public class Reservation implements Serializable {
         return this;
     }
 
-    public Reservation date(LocalDate date) {
+    public Reservation date(LocalDateTime date) {
         this.date = date;
         return this;
     }
 
-    public Reservation dateLimit(LocalDate dateLimit) {
+    public Reservation dateLimit(LocalDateTime dateLimit) {
         this.dateLimit = dateLimit;
         return this;
     }
+
+
+    public Boolean isActif() {
+        return this.actif;
+    }
+
+    public Boolean getActif() {
+        return this.actif;
+    }
+
+    public void setActif(Boolean actif) {
+        this.actif = actif;
+    }
+
+
 
     @Override
     public String toString() {

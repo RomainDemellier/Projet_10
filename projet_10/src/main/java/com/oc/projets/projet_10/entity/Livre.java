@@ -36,8 +36,9 @@ public class Livre {
 	@Column(name = "nbre_exemplaires")
 	private int nbreExemplaires;
 
-	@Column(name = "nbre_exemplaires_total")
-	private int nbreExemplairesTotal;
+	private int nbreTotal;
+
+	private Boolean reservable = true;
 	
 //	@Column(name = "full_name_auteur")
 //	private String fullNameAuteur;
@@ -83,18 +84,32 @@ public class Livre {
 		return nbreExemplaires;
 	}
 
-
-	public int getNbreExemplairesTotal() {
-		return this.nbreExemplairesTotal;
-	}
-
 	public void setNbreExemplaires(int nbreExemplaires) {
 		this.nbreExemplaires = nbreExemplaires;
 	}
 
-	public void setNbreExemplairesTotal(int nbreExemplairesTotal) {
-		this.nbreExemplairesTotal = nbreExemplairesTotal;
+
+	public int getNbreTotal() {
+		return this.nbreTotal;
 	}
+
+	public void setNbreTotal(int nbreTotal) {
+		this.nbreTotal = nbreTotal;
+	}
+
+
+	public Boolean isReservable() {
+		return this.reservable;
+	}
+
+	public Boolean getReservable() {
+		return this.reservable;
+	}
+
+	public void setReservable(Boolean reservable) {
+		this.reservable = reservable;
+	}
+
 
 //	public String getFullNameAuteur() {
 //		return fullNameAuteur;

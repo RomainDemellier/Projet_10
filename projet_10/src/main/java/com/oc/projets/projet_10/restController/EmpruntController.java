@@ -104,7 +104,7 @@ public class EmpruntController {
 	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<EmpruntDTO> rendre(@PathVariable(value = "id") Long empruntId) {
 		Emprunt emprunt = this.empruntService.findById(empruntId);
-		this.livreService.rendre(emprunt.getExemplaire().getLivre());
+		//this.livreService.rendre(emprunt.getExemplaire().getLivre());
 		return ResponseEntity.ok(this.empruntService.delete(emprunt));
 	}
 	

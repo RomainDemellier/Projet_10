@@ -2,7 +2,9 @@ package com.oc.projets.projet_10.restController;
 
 import com.oc.projets.projet_10.dto.ReservationDTO;
 import com.oc.projets.projet_10.entity.Reservation;
+import com.oc.projets.projet_10.exception.ReservationException;
 import com.oc.projets.projet_10.exception.ResourceNotFoundException;
+import com.oc.projets.projet_10.exception.UsagerException;
 import com.oc.projets.projet_10.service.ReservationService;
 
 import java.util.List;
@@ -31,7 +33,7 @@ public class ReservationController {
     private ReservationService reservationService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReservationDTO> getReservation(@PathVariable(value = "id") Long id){
+    public ResponseEntity getReservation(@PathVariable(value = "id") Long id){
         try {
             ReservationDTO reservationDTO = this.reservationService.getById(id);
             return ResponseEntity.ok(reservationDTO);
@@ -39,7 +41,7 @@ public class ReservationController {
             //TODO: handle exception
             e.printStackTrace();
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("toto");
     }
 
     @GetMapping("")
@@ -48,15 +50,21 @@ public class ReservationController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ReservationDTO> create(ReservationDTO reservationDTO){
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity create(@RequestBody ReservationDTO reservationDTO){
+    	System.out.println("reservation : " + reservationDTO.toString());
         try {
-            
-            return ResponseEntity.ok(this.reservationService.create(reservationDTO));
-        } catch (Exception e) {
+        	
+            ReservationDTO reservationDTO2 = this.reservationService.create(reservationDTO);
+            return ResponseEntity.ok(reservationDTO2);
+        } catch (ReservationException e) {
             //TODO: handle exception
             e.printStackTrace();
-        }
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(reservationDTO);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(reservationDTO);
+        } catch (UsagerException e) {
+			// TODO: handle exception
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad request");
+		}
     }
 
     @PutMapping("/update/{id}")
@@ -71,15 +79,25 @@ public class ReservationController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ReservationDTO> delete(@PathVariable(value = "id") Long id){
+    public ResponseEntity delete(@PathVariable(value = "id") Long id){
         try {
-            Reservation reservation = this.reservationService.findById(id);
-            return ResponseEntity.ok(this.reservationService.delete(reservation));
-        } catch (ResourceNotFoundException e) {
+//            Reservation reservation = this.reservationService.findById(id);
+        	System.out.println("Dans Reservation Controller methode delete.");
+            return ResponseEntity.ok(this.reservationService.delete(id));
+        } catch (ReservationException e) {
             //TODO: handle exception
             e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Imbossible de supprimer cette réservation");
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+    }
+    
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/dateLimitDepasse")
+    public ResponseEntity getReservationDateLimitDepasse() {
+    	System.out.println("Dans Réservation Controller getReservationDateLimitDepasse");
+    	return ResponseEntity.ok(this.reservationService.getReservationDateLimitDepasse());
     }
 }

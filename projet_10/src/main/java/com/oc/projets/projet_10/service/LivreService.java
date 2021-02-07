@@ -33,6 +33,7 @@ public class LivreService {
 		logger.info("Début de la méthode createLivre. Prend en argument de type LivreCreationDTO : " + livreDTO.toString());
 		
 		Livre livre = this.conversionLivre.convertToEntity(livreDTO);
+		livre.setReservable(true);
 		//livre.setFullNameAuteur(livre.getAuteur().getPrenom() + ' ' + livre.getAuteur().getNom());
 		livre = this.livreRepository.save(livre);
 		
@@ -125,4 +126,5 @@ public class LivreService {
 		
 		logger.info("Fin de la méthode rendre. Ne retourne rien");
 	}
+	
 }
