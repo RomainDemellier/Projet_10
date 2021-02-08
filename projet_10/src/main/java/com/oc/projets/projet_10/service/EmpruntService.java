@@ -21,9 +21,12 @@ import com.oc.projets.projet_10.entity.Exemplaire;
 import com.oc.projets.projet_10.entity.Livre;
 import com.oc.projets.projet_10.entity.Usager;
 import com.oc.projets.projet_10.exception.EmpruntException;
+import com.oc.projets.projet_10.exception.ProlongationException;
 import com.oc.projets.projet_10.exception.ResourceNotFoundException;
 import com.oc.projets.projet_10.repository.EmpruntRepository;
 import com.sun.istack.FinalArrayList;
+
+import lombok.experimental.var;
 
 @Service
 public class EmpruntService {
@@ -125,21 +128,31 @@ public class EmpruntService {
 		return this.conversionEmprunt.convertToDto(emprunt);
 	}
 	
-	public EmpruntDTO prolonger(Long empruntId) throws EmpruntException {
+	public EmpruntDTO prolonger(Long empruntId) throws EmpruntException, ProlongationException {
 		
 		logger.info("Début de la méthode prolonger. Prend un argument de type Long : " + empruntId);
 		
-		System.out.println("Test");
-		
 		Emprunt emprunt = this.findById(empruntId);
 		if(!emprunt.getProlonge()) {
-			emprunt.setProlonge(true);
-			emprunt.setDateRetour(emprunt.getDateEmprunt().plusDays(56));
-			this.empruntRepository.save(emprunt);
 			
-			logger.info("Fin de la méthode prolonger. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
+			LocalDate localDate = LocalDate.now();
+			LocalDate dateRetour = emprunt.getDateRetour();
 			
-			return this.conversionEmprunt.convertToDto(emprunt);
+			if(localDate.compareTo(dateRetour) < 0) {
+				
+				emprunt.setProlonge(true);
+				emprunt.setDateRetour(emprunt.getDateEmprunt().plusDays(56));
+				this.empruntRepository.save(emprunt);
+				
+				logger.info("Fin de la méthode prolonger. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
+				
+				return this.conversionEmprunt.convertToDto(emprunt);
+			} else {
+				logger.warn("Dans la méthode prolonger. Date limite dépassée pour prolonger cet emprunt. Emprunt : " + emprunt.toString());
+				
+				throw new ProlongationException("Vous avez dépassé la date limite pour prolonger votre emprunt");
+			}
+			
 		} else {
 			
 			logger.warn("Dans la méthode prolonger. Cet emprunt a déjà été prolonger. Emprunt : " + emprunt.toString());

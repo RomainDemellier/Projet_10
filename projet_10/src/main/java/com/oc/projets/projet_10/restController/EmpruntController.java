@@ -31,6 +31,8 @@ import com.oc.projets.projet_10.dto.UsagerGetDTO;
 import com.oc.projets.projet_10.entity.Emprunt;
 import com.oc.projets.projet_10.entity.Exemplaire;
 import com.oc.projets.projet_10.entity.Usager;
+import com.oc.projets.projet_10.exception.EmpruntException;
+import com.oc.projets.projet_10.exception.ProlongationException;
 import com.oc.projets.projet_10.repository.EmpruntRepository;
 import com.oc.projets.projet_10.service.EmpruntService;
 import com.oc.projets.projet_10.service.ExemplaireService;
@@ -94,10 +96,16 @@ public class EmpruntController {
 	public ResponseEntity<EmpruntDTO> prolonger(@PathVariable(value = "id") Long empruntId) {
 		try{
 			return ResponseEntity.ok(this.empruntService.prolonger(empruntId));
-		} catch(Exception e) {
+		} catch(ProlongationException e) {
 			e.printStackTrace();
+			// error.status 403
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+		} catch (EmpruntException e) {
+			e.printStackTrace();
+			// error.status 409
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
 		}
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+		
 	}
 	
 	@DeleteMapping("/delete/{id}")
