@@ -148,7 +148,7 @@ public class EmpruntService {
 				
 				return this.conversionEmprunt.convertToDto(emprunt);
 			} else {
-				logger.warn("Dans la méthode prolonger. Date limite dépassée pour prolonger cet emprunt. Emprunt : " + emprunt.toString());
+				logger.warn("Dans la méthode prolonger. Date butoir dépassée pour prolonger cet emprunt. Emprunt : " + emprunt.toString());
 				
 				throw new ProlongationException("Vous avez dépassé la date limite pour prolonger votre emprunt");
 			}
