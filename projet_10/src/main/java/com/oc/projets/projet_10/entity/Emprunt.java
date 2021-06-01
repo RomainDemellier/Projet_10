@@ -55,6 +55,16 @@ public class Emprunt implements Serializable {
 		// TODO Auto-generated constructor stub
 	}
 
+	public Emprunt(Long id, Exemplaire exemplaire, Usager usager, LocalDate dateEmprunt, LocalDate dateRetour, Boolean prolonge, Boolean actif) {
+		this.id = id;
+		this.exemplaire = exemplaire;
+		this.usager = usager;
+		this.dateEmprunt = dateEmprunt;
+		this.dateRetour = dateRetour;
+		this.prolonge = prolonge;
+		this.actif = actif;
+	}
+
 	public Long getId() {
 		return id;
 	}

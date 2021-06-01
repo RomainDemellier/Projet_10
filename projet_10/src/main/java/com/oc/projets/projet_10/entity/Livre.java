@@ -1,18 +1,15 @@
 package com.oc.projets.projet_10.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "livre")
@@ -38,14 +35,21 @@ public class Livre {
 
 	private int nbreTotal;
 
-	private Boolean reservable = true;
-	
-//	@Column(name = "full_name_auteur")
-//	private String fullNameAuteur;
+	@Column(columnDefinition = "integer default 0")
+	private int nbreReservations;
 	
 	public Livre() {
 		// TODO Auto-generated constructor stub
 		super();
+	}
+
+	public Livre(Long id, String titre, Auteur auteur, String genre, int nbreExemplaires, int nbreTotal, Boolean reservable) {
+		this.id = id;
+		this.titre = titre;
+		this.auteur = auteur;
+		this.genre = genre;
+		this.nbreExemplaires = nbreExemplaires;
+		this.nbreTotal = nbreTotal;
 	}
 
 	public Long getId() {
@@ -97,31 +101,25 @@ public class Livre {
 		this.nbreTotal = nbreTotal;
 	}
 
-
-	public Boolean isReservable() {
-		return this.reservable;
+	public int getNbreReservations() {
+		return nbreReservations;
 	}
 
-	public Boolean getReservable() {
-		return this.reservable;
+	public void setNbreReservations(int nbreReservations) {
+		this.nbreReservations = nbreReservations;
 	}
-
-	public void setReservable(Boolean reservable) {
-		this.reservable = reservable;
-	}
-
-
-//	public String getFullNameAuteur() {
-//		return fullNameAuteur;
-//	}
-//
-//	public void setFullNameAuteur(String fullNameAuteur) {
-//		this.fullNameAuteur = fullNameAuteur;
-//	}
 
 	@Override
 	public String toString() {
-		return "Livre [id=" + id + ", titre=" + titre + ", auteur=" + auteur + ", genre=" + genre + ", nbreExemplaires="
-				+ nbreExemplaires + "]";
+		return "Livre{" +
+				"id=" + id +
+				", titre='" + titre + '\'' +
+				", auteur=" + auteur +
+				", genre='" + genre + '\'' +
+				", nbreExemplaires=" + nbreExemplaires +
+				", nbreTotal=" + nbreTotal +
+				", nbreReservations=" + nbreReservations +
+//				", datePlusProcheRetourPrevue=" + datePlusProcheRetourPrevue +
+				'}';
 	}
 }

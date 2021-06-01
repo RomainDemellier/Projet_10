@@ -28,7 +28,7 @@ public class ExemplaireService {
 	@Autowired
 	private ConversionExemplaire conversionExemplaire;
 	
-	Logger logger = LoggerFactory.getLogger(EmpruntService.class);
+	Logger logger = LoggerFactory.getLogger(ExemplaireService.class);
 	
 	public Exemplaire createExemplaire(ExemplaireDTO exemplaireDTO) {
 		
@@ -76,5 +76,17 @@ public class ExemplaireService {
 		logger.info("Fin de la méthode getAllExemplaires. Retourne une liste List<ExemplaireDTO>.");
 		
 		return exemplaires.stream().map(exemplaire -> this.conversionExemplaire.convertToDto(exemplaire)).collect(Collectors.toList());
+	}
+
+	public ExemplaireDTO update(Long id, ExemplaireDTO exemplaireDTO){
+		exemplaireDTO.setId(id);
+		Exemplaire exemplaire = this.conversionExemplaire.convertToEntity(exemplaireDTO);
+		exemplaire = this.exemplaireRepository.save(exemplaire);
+		return this.conversionExemplaire.convertToDto(exemplaire);
+	}
+
+	public void delete(Long id){
+		Exemplaire exemplaire = this.findById(id);
+		this.exemplaireRepository.delete(exemplaire);
 	}
 }

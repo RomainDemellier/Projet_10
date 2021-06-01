@@ -33,11 +33,11 @@ public class Reservation implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "livre_id", nullable = false)
     private Livre livre;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "usager_id", nullable = false)
     private Usager usager;
 
@@ -100,38 +100,8 @@ public class Reservation implements Serializable {
         this.dateLimit = dateLimit;
     }
 
-    public Reservation id(Long id) {
-        this.id = id;
-        return this;
-    }
-
-    public Reservation livre(Livre livre) {
-        this.livre = livre;
-        return this;
-    }
-
-    public Reservation usager(Usager usager) {
-        this.usager = usager;
-        return this;
-    }
-
-    public Reservation date(LocalDateTime date) {
-        this.date = date;
-        return this;
-    }
-
-    public Reservation dateLimit(LocalDateTime dateLimit) {
-        this.dateLimit = dateLimit;
-        return this;
-    }
-
-
-    public Boolean isActif() {
-        return this.actif;
-    }
-
     public Boolean getActif() {
-        return this.actif;
+        return actif;
     }
 
     public void setActif(Boolean actif) {
@@ -139,16 +109,16 @@ public class Reservation implements Serializable {
     }
 
 
-
     @Override
     public String toString() {
-        return "{" +
-            " id='" + getId() + "'" +
-            ", livre='" + getLivre() + "'" +
-            ", usager='" + getUsager() + "'" +
-            ", date='" + getDate() + "'" +
-            ", dateLimit='" + getDateLimit() + "'" +
-            "}";
+        return "Reservation{" +
+                "id=" + id +
+                ", livre=" + livre +
+                ", usager=" + usager +
+                ", date=" + date +
+                ", dateLimit=" + dateLimit +
+                ", actif=" + actif +
+                '}';
     }
 
 

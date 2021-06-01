@@ -7,21 +7,15 @@ import java.util.stream.Collectors;
 
 import javax.validation.constraints.Size;
 
+import com.oc.projets.projet_10.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.access.method.P;
 import org.springframework.security.access.prepost.PreAuthorize;
 //import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 //import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.oc.projets.projet_10.conversion.ConversionEmprunt;
 import com.oc.projets.projet_10.conversion.ConversionUsager;
@@ -59,8 +53,14 @@ public class UsagerRestController {
 	
 	@Autowired
 	private ConversionEmprunt conversionEmprunt;
-	
+
 	@GetMapping("")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<List<UsagerGetDTO>> getAll(){
+		return ResponseEntity.ok(this.usagerService.getAll());
+	}
+	
+	@GetMapping("/notConnected")
 	@PreAuthorize("hasAuthority('ADMIN')")
 	public ResponseEntity<List<UsagerGetDTO>> getAllUsagers(){
 		return ResponseEntity.ok(this.usagerService.getAllIdNot(this.usagerConnecteService.getUsagerConnecte().getId()));
@@ -126,6 +126,28 @@ public class UsagerRestController {
 	public ResponseEntity<List<ReservationDTO>> getReservations(){
 		System.out.println("Size : " + this.empruntService.getEmpruntsUsagerConnecte().size());
 		return ResponseEntity.ok(this.reservationService.getReservationsUsagerConnecte());
+	}
+
+	@PutMapping("/update/{id}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<UsagerGetDTO> update(@PathVariable(value = "id") Long id, @RequestBody UsagerGetDTO usagerGetDTO){
+		try {
+			usagerGetDTO = this.usagerService.update(id,usagerGetDTO);
+			return ResponseEntity.ok(usagerGetDTO);
+		} catch (ResourceNotFoundException e){
+			return new ResponseEntity(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@DeleteMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity delete(@PathVariable(value = "id") Long id){
+		try {
+			this.usagerService.delete(id);
+			return ResponseEntity.ok(HttpStatus.OK);
+		} catch (ResourceNotFoundException e){
+			return new ResponseEntity(HttpStatus.NOT_FOUND);
+		}
 	}
 	
 	@GetMapping("/connecte")

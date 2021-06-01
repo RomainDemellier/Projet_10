@@ -63,6 +63,15 @@ public class Usager implements Serializable {
 		this.password = password;
 	}
 
+	public Usager(Long id, String nom, String prenom, String email, String password, String role) {
+		this.id = id;
+		this.nom = nom;
+		this.prenom = prenom;
+		this.email = email;
+		this.password = password;
+		this.role = role;
+	}
+
 	public Long getId() {
 		return id;
 	}

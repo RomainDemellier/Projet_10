@@ -72,6 +72,12 @@ public class EmpruntController {
 	public ResponseEntity<List<EmpruntDTO>> getListEmprunts(){
 		return ResponseEntity.ok(this.empruntService.getListEmprunts());
 	}
+
+	@GetMapping("/actif")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<List<EmpruntDTO>> getListEmpruntsActifs(){
+		return ResponseEntity.ok(this.empruntService.getEmpruntsActif());
+	}
 	
 	@PostMapping("/create")
 	//@PreAuthorize("isAuthenticated()")
@@ -93,17 +99,17 @@ public class EmpruntController {
 	
 	@PutMapping("/prolonger/{id}")
 	@PreAuthorize("isAuthenticated()")
-	public ResponseEntity<EmpruntDTO> prolonger(@PathVariable(value = "id") Long empruntId) {
+	public ResponseEntity prolonger(@PathVariable(value = "id") Long empruntId) {
 		try{
-			return ResponseEntity.ok(this.empruntService.prolonger(empruntId));
+			return ResponseEntity.ok(this.empruntService.findBYIdAndProlonger(empruntId));
 		} catch(ProlongationException e) {
 			e.printStackTrace();
-			// error.status 403
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+			// error.status 409
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		} catch (EmpruntException e) {
 			e.printStackTrace();
 			// error.status 409
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
 		
 	}

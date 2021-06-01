@@ -17,6 +17,7 @@ public class ReservationDTO implements Serializable {
 
     private LocalDateTime dateLimit;
 
+    public Boolean actif;
 
     public ReservationDTO() {
     }
@@ -68,4 +69,25 @@ public class ReservationDTO implements Serializable {
     public void setDateLimit(LocalDateTime dateLimit) {
         this.dateLimit = dateLimit;
     }
-} 
+
+    public Boolean getActif() {
+        return actif;
+    }
+
+    public void setActif(Boolean actif) {
+        this.actif = actif;
+    }
+
+
+    @Override
+    public String toString() {
+        return "ReservationDTO{" +
+                "id=" + id +
+                ", livre=" + livre +
+                ", usager=" + usager +
+                ", date=" + date +
+                ", dateLimit=" + dateLimit +
+                ", actif=" + actif +
+                '}';
+    }
+}

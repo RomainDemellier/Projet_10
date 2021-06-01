@@ -12,6 +12,7 @@ import java.text.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import com.oc.projets.projet_10.conversion.ConversionEmprunt;
@@ -80,6 +81,11 @@ public class EmpruntService {
 		
 		return emprunts.stream().map(emprunt -> this.conversionEmprunt.convertToDto(emprunt)).collect(Collectors.toList());
 	}
+
+	public List<EmpruntDTO> getEmpruntsActif(){
+		List<Emprunt> emprunts = this.empruntRepository.findByActif(true);
+		return emprunts.stream().map(emprunt -> this.conversionEmprunt.convertToDto(emprunt)).collect(Collectors.toList());
+	}
 	
 	public EmpruntDTO create(EmpruntDTO empruntDTO){
 		
@@ -101,12 +107,19 @@ public class EmpruntService {
 		emprunt.setProlonge(false);
 			
 		emprunt.setActif(true);
+
 		Exemplaire exemplaire = this.exemplaireService.findById(emprunt.getExemplaire().getId());
 		Livre livre = exemplaire.getLivre();
 		livre.setNbreExemplaires(livre.getNbreExemplaires() - 1);
 		this.livreService.editLivre(livre);
 		emprunt.setExemplaire(exemplaire);
+
+		this.reservationService.deleteReservationIfEmprunt(livre,usager);
+
 		this.empruntRepository.save(emprunt);
+
+//		this.setDateRetourLaPlusProche(emprunt);
+
 		empruntDTO = this.conversionEmprunt.convertToDto(emprunt);
 		
 		logger.info("Fin de la méthode create. Retourne un EmpruntDTO : " + empruntDTO.toString());
@@ -120,19 +133,37 @@ public class EmpruntService {
 		
 		emprunt.setActif(false);
 		this.empruntRepository.save(emprunt);
-		
-		this.reservationService.setDateLimitIfReservation(emprunt.getExemplaire().getLivre());
+
+//		this.setDateRetourLaPlusProche(emprunt);
+
+		Livre livre = emprunt.getExemplaire().getLivre();
+		Boolean isStillReservations = this.reservationService.isStillReservations(livre);
+		this.reservationService.setDateLimitIfReservation(livre,isStillReservations);
 		
 		logger.info("Fin de la méthode delete. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
 		
 		return this.conversionEmprunt.convertToDto(emprunt);
 	}
-	
-	public EmpruntDTO prolonger(Long empruntId) throws EmpruntException, ProlongationException {
-		
-		logger.info("Début de la méthode prolonger. Prend un argument de type Long : " + empruntId);
-		
+
+	public EmpruntDTO findBYIdAndProlonger(Long empruntId) throws EmpruntException, ProlongationException {
 		Emprunt emprunt = this.findById(empruntId);
+		try {
+			emprunt = this.prolonger(emprunt);
+			this.empruntRepository.save(emprunt);
+//			this.setDateRetourLaPlusProche(emprunt);
+			return conversionEmprunt.convertToDto(emprunt);
+		} catch (EmpruntException e){
+			throw  new EmpruntException(e.getMessage());
+		} catch (ProlongationException e){
+			throw new ProlongationException(e.getMessage());
+		}
+	}
+	
+	public Emprunt prolonger(Emprunt emprunt) throws EmpruntException, ProlongationException {
+		
+		logger.info("Début de la méthode prolonger. Prend un argument de type Long : " + emprunt.toString());
+		
+		//Emprunt emprunt = this.findById(empruntId);
 		if(!emprunt.getProlonge()) {
 			
 			LocalDate localDate = LocalDate.now();
@@ -142,11 +173,12 @@ public class EmpruntService {
 				
 				emprunt.setProlonge(true);
 				emprunt.setDateRetour(emprunt.getDateEmprunt().plusDays(56));
-				this.empruntRepository.save(emprunt);
+				//this.empruntRepository.save(emprunt);
 				
 				logger.info("Fin de la méthode prolonger. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
-				
-				return this.conversionEmprunt.convertToDto(emprunt);
+
+				return emprunt;
+				//return this.conversionEmprunt.convertToDto(emprunt);
 			} else {
 				logger.warn("Dans la méthode prolonger. Date butoir dépassée pour prolonger cet emprunt. Emprunt : " + emprunt.toString());
 				
@@ -172,14 +204,17 @@ public class EmpruntService {
 		
 		return emprunts.stream().map(emprunt -> this.conversionEmprunt.convertToDto(emprunt)).collect(Collectors.toList());
 	}
+
+	public List<Emprunt> findByUsagerAndActif(Usager usager){
+		return this.empruntRepository.findByUsagerAndActif(usager,true);
+	}
 	
 	public void dejaEnPossession(EmpruntDTO empruntDTO) throws EmpruntException {
 		
 		logger.info("Début de la méthode dejaEnPossession. Prend un argument de type EmpruntDTO : " + empruntDTO.toString());
 		
-		//Usager usager = this.usagerConnecteService.authentification();
 		Usager usager = this.usagerService.findById(empruntDTO.getUsager().getId());
-		List<Emprunt> emprunts = this.empruntRepository.findByUsagerAndActif(usager, true);
+		List<Emprunt> emprunts = this.findByUsagerAndActif(usager);
 		Exemplaire exemplaire = this.exemplaireService.findById(empruntDTO.getExemplaire().getId());
 		for(int i = 0;i < emprunts.size();i++) {
 			if(emprunts.get(i).getExemplaire().getLivre().getId().equals(exemplaire.getLivre().getId())) {
@@ -208,5 +243,12 @@ public class EmpruntService {
 		
 		return calendar.getTime();
 	}
-	
+
+	public int countEmpruntsByUsagerAndByLivre(Usager usager, Livre livre){
+		return this.empruntRepository.countEmpruntsByUsagerAndLivreAndActif(usager.getId(),livre.getId());
+	}
+
+	public  LocalDate getDateRetourLaPlusProche(Long livreId){
+		return this.empruntRepository.findDateRetourPlusProche(livreId);
+	}
 }

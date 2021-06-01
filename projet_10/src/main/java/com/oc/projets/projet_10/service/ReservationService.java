@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ReservationService {
-    
+
+    Logger logger = LoggerFactory.getLogger(ReservationService.class);
+
     @Autowired
     private ReservationRepository reservationRepository;
 
@@ -34,6 +38,9 @@ public class ReservationService {
 
     @Autowired
     private UsagerService usagerService;
+
+    @Autowired
+    private EmpruntService empruntService;
 
     @Autowired
     private UsagerConnecteService usagerConnecteService;
@@ -47,6 +54,10 @@ public class ReservationService {
     @Autowired
     private ConversionUsager conversionUsager;
 
+    public void saveReservation(Reservation reservation){
+        this.reservationRepository.save(reservation);
+    }
+
     public Reservation findById(Long id){
         
         return this.reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Reservation", "id", id));
@@ -57,116 +68,182 @@ public class ReservationService {
         return this.conversionReservation.convertToDto(reservation);
     }
 
-    public ReservationDTO create(ReservationDTO reservationDTO) throws ReservationException, UsagerException {
+    public Reservation create(Livre livre, Usager usager, ReservationDTO reservationDTO) throws ReservationException {
+        if(!this.isLivreReservable(livre)){
+            throw new ReservationException("Ce livre ne peut pas être réservé");
+        }
+        if(this.allReadyReserved(livre,usager)){
+            throw new ReservationException("Vous avez déjà réservé ce livre");
+        }
+        if(this.checkIfEmpruntEnCours(usager,livre)){
+            throw new ReservationException("Vous ne pouvez pas réserver ce livre, parce que vous avez un emprunt en cours avec ce livre.");
+        }
 
-                
-                    Livre livre = livreService.findById(reservationDTO.getLivre().getId());
-                    if(livre.isReservable() && livre.getNbreExemplaires() <= 0){
-                        Usager usager = this.usagerConnecteService.authentification();
+        Reservation reservation = this.conversionReservation.convertToEntity(reservationDTO);
 
-                        List<Reservation> reservations = this.reservationRepository.findByLivreAndUsagerAndActif(livre, usager, true);
-            
-                        Reservation reservation = this.conversionReservation.convertToEntity(reservationDTO);
-                        if(reservations.size() > 0){
-                            throw new UsagerException("Vous avez déjà réservé ce livre");
-                        }
-                        reservation.setUsager(usager);
-                        reservation.setLivre(livre);
-                        LocalDateTime localDate = LocalDateTime.now();
-                        
-                        System.out.println("Date : " + localDate);
-            
-                        reservation.setDate(localDate);
-                
-                        reservation.setDateLimit(null);
-            
-                        reservation.setActif(true);
-                
-                        reservation = this.reservationRepository.save(reservation);
+        reservation.setUsager(usager);
+        reservation.setLivre(livre);
+        LocalDateTime localDate = LocalDateTime.now();
 
-                        int nbreReservations = this.numberOfReservations(livre);
-                        System.out.println("nbrereservation : " + nbreReservations);
-                        if(nbreReservations >= 2*livre.getNbreTotal()){
-                            livre.setReservable(false);
-                            this.livreService.editLivre(livre);
-                        }
-                
-                        return this.conversionReservation.convertToDto(reservation);
+        System.out.println("Date : " + localDate);
 
-                    } else {
-                        int nbreReservations = this.numberOfReservations(livre);
-                        System.out.println("nbrereservation : " + nbreReservations);
-                        throw new ReservationException("Ce livre ne peut pas être réservé");
-                    }
+        reservation.setDate(localDate);
+
+        reservation.setDateLimit(null);
+
+        reservation.setActif(true);
+
+        this.setNbreReservationsForLivre(livre,"+");
+
+        return reservation;
+    }
+
+    public ReservationDTO getLivreAndUsagerAndCreate(ReservationDTO reservationDTO) throws ReservationException {
+
+        Livre livre = livreService.findById(reservationDTO.getLivre().getId());
+        Usager usager = this.usagerConnecteService.authentification();
+
+        try {
+            Reservation reservation = this.create(livre,usager,reservationDTO);
+            reservation = this.reservationRepository.save(reservation);
+
+            int nbreReservations = this.numberOfReservations(livre);
+            System.out.println("nbrereservation : " + nbreReservations);
+            this.livreService.editLivre(livre);
+            return this.conversionReservation.convertToDto(reservation);
+        } catch (ReservationException e) {
+            throw new ReservationException(e.getMessage());
+/*        } catch (UsagerException e) {
+            throw new UsagerException(e.getMessage());*/
+        }
+    }
+
+    public void editReservation(Reservation reservation){
+        this.reservationRepository.save(reservation);
+    }
+
+    public Boolean isLivreReservable(Livre livre){
+        int nbreReservations = this.countReservationsByLivreAndActif(livre);
+        if(nbreReservations >= livre.getNbreTotal()*2 || livre.getNbreExemplaires() > 0){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean allReadyReserved(Livre livre, Usager usager) {
+        if(this.numberReservationForLivreAndUsager(livre,usager) > 0){
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean checkIfEmpruntEnCours(Usager usager, Livre livre) {
+        if(this.empruntService.countEmpruntsByUsagerAndByLivre(usager,livre) > 0){
+            return true;
+        }
+        return false;
+    }
+
+    public int numberReservationForLivreAndUsager(Livre livre, Usager usager)  {
+        System.out.println("Dans number reservations : " + this.reservationRepository.countReservationsByLivreAndUsagerAndActif(livre,usager,true));
+        return this.reservationRepository.countReservationsByLivreAndUsagerAndActif(livre,usager,true);
+    }
+
+    public List<Reservation> reservationForLivreAndUsager(Livre livre, Usager usager){
+        return  this.reservationRepository.findReservationsByLivreAndUsagerAndActifAndDateLimitNotNull(livre,usager,true);
     }
 
     public List<ReservationDTO> getAllReservations(){
+
+        logger.info("Début de la méthode getAllReservations. Pas d'arguments");
+
         List<Reservation> reservations = this.reservationRepository.findAll();
+
+        logger.info("Fin de la méthode getAllReservations. Retourne une liste List<ReservationDTO>.");
+
+        return reservations.stream().map(reservation -> this.conversionReservation.convertToDto(reservation)).collect(Collectors.toList());
+    }
+
+    public List<ReservationDTO> getAllReservationsActif(){
+
+        logger.info("Début de la méthode getAllReservations. Pas d'arguments");
+
+        List<Reservation> reservations = this.reservationRepository.findReservationByActif(true);
+
+        logger.info("Fin de la méthode getAllReservations. Retourne une liste List<ReservationDTO>.");
 
         return reservations.stream().map(reservation -> this.conversionReservation.convertToDto(reservation)).collect(Collectors.toList());
     }
 
     public List<ReservationDTO> getReservationsUsagerConnecte(){
         Usager usager = this.usagerConnecteService.authentification();
-        List<Reservation> reservations = this.reservationRepository.findByUsagerAndActifOrderByDateAsc(usager,true);
+        List<Reservation> reservations = this.reservationRepository.findReservationsByUsagerAndActifOrderByDateAsc(usager,true);
         return reservations.stream().map(reservation -> this.conversionReservation.convertToDto(reservation)).collect(Collectors.toList());
     }
 
-    public List<ReservationDTO> getReservationsByLivre(LivreDTO livreDTO){
-        Livre livre = this.livreService.findById(livreDTO.getId());
-        List<Reservation> reservations = this.reservationRepository.findByLivreAndActifOrderByDateAsc(livre, true);
-        return reservations.stream().map(reservation -> this.conversionReservation.convertToDto(reservation)).collect(Collectors.toList());
-    }
-
-    public ReservationDTO update(Long id) {
+    public ReservationDTO findAndUpdate(Long id){
         try {
             Reservation reservation = this.findById(id);
-//            LocalDateTime dateLimit = LocalDateTime.now().plusDays(2);
-//            int minutes = dateLimit.getMinute();
-//            dateLimit = dateLimit.minusMinutes(minutes);
-//            dateLimit = dateLimit.plusHours(1);
-            LocalDateTime dateLimit = LocalDateTime.now();
-            reservation.setDateLimit(dateLimit);
+            reservation = this.setDateLimit(reservation);
             this.reservationRepository.save(reservation);
-            return this.conversionReservation.convertToDto(reservation);
+            return  this.conversionReservation.convertToDto(reservation);
         } catch (ResourceNotFoundException e) {
             //TODO: handle exception
             throw new ResourceNotFoundException("Reservation", "id", id);
         }
     }
 
-    public ReservationDTO delete(Long id) throws ReservationException {
-    	try {
-    		Reservation reservation = this.findById(id);
-    		Livre livre = reservation.getLivre();
-    		reservation.setActif(false);
-    		this.reservationRepository.save(reservation);
-    		this.setDateLimitIfReservation(livre);
-    		if(!livre.isReservable()) {
-    			livre.setReservable(true);
-    		}
-    		this.livreService.editLivre(livre);
-    		return this.conversionReservation.convertToDto(reservation);
-		} catch (ResourceNotFoundException e) {
-			// TODO: handle exception
-			throw new ReservationException("Impossible de supprimer cette réservation.");
-		}
-//        this.reservationRepository.delete(reservation);
-//        return this.conversionReservation.convertToDto(reservation);
-    } 
-    
-    public void setDateLimitIfReservation(Livre livre) {
-    	//Livre livre = emprunt.getExemplaire().getLivre();
-    	int nbre = this.reservationRepository.countByLivreAndActifAndDateLimit(livre, true, null);
-    	List<Reservation> reservations = new ArrayList<Reservation>();
-    	if(nbre > 0) {
-    		reservations = this.reservationRepository.findByLivreAndActifAndDateLimitOrderByDateAsc(livre, true, null);
-    		Reservation reservation = reservations.get(0);
-    		this.update(reservation.getId());
-    		this.emailService.transformReservation(reservation);
-    	} else {
-    		this.livreService.rendre(livre);
-    	}
+    public Reservation setDateLimit(Reservation reservation) {
+
+            LocalDateTime dateLimit = LocalDateTime.now().plusDays(2);
+            int minutes = dateLimit.getMinute();
+            dateLimit = dateLimit.minusMinutes(minutes);
+            dateLimit = dateLimit.plusHours(1);
+            reservation.setDateLimit(dateLimit);
+            //this.reservationRepository.save(reservation);
+            return reservation;
+    }
+
+    public ReservationDTO findAndDelete(Long id) throws ResourceNotFoundException {
+        try {
+            Reservation reservation = this.findById(id);
+            return this.delete(reservation);
+        } catch (ResourceNotFoundException e){
+            throw new ResourceNotFoundException("Reservation", "id", id);
+        }
+    }
+
+    public ReservationDTO delete(Reservation reservation)  {
+
+        Livre livre = reservation.getLivre();
+        this.setActif(reservation);
+        this.saveReservation(reservation);
+        this.setNbreReservationsForLivre(livre,"-");
+        if(reservation.getDateLimit() != null){
+            Boolean isStillReservation  = this.isStillReservations(livre);
+            System.out.println("isStillReservation : " + isStillReservation);
+            this.setDateLimitIfReservation(livre,isStillReservation);
+            this.livreService.rendreLivreIfNoReservations(livre,isStillReservation);
+//            int n = this.numberOfReservations(livre);
+            this.livreService.editLivre(livre);
+            this.sendEmailForReservation(reservation,isStillReservation);
+        }
+        return this.conversionToDTO(reservation);
+    }
+
+    public void setDateLimitIfReservation(Livre livre, Boolean isStillReservations){
+        if(isStillReservations) {
+            List<Reservation> reservations = this.reservationRepository.findReservationsByLivreAndActifAndDateLimitOrderByDateAsc(livre, true, null);
+            Reservation reservation = reservations.get(0);
+
+            this.findAndUpdate(reservation.getId());
+        }
+    }
+
+    public void sendEmailForReservation(Reservation reservation, Boolean isStillReservation){
+        if(isStillReservation){
+            this.emailService.transformReservation(reservation);
+        }
     }
     
     public List<ReservationDTO> getReservationDateLimitDepasse(){
@@ -174,12 +251,52 @@ public class ReservationService {
     	//System.out.println(reservations.size());
     	return reservations.stream().map(reservation -> this.conversionReservation.convertToDto(reservation)).collect(Collectors.toList());
     }
-    
-    private Usager getUsagerConnecte(){
-        return this.conversionUsager.convertToEntity(this.usagerConnecteService.getUsagerConnecte());
+
+    public Boolean isStillReservations(Livre livre){
+        //return this.reservationRepository.countByLivreAndActifAndDateLimit(livre,true,null) > 0 ? true : false;
+        return this.numberOfReservationsDateLimitNull(livre) > 0;
     }
 
-    private int numberOfReservations(Livre livre){
-        return this.reservationRepository.countByLivreAndActif(livre, true);
+    public int numberOfReservations(Livre livre){
+        return this.reservationRepository.countReservationsByLivreAndActif(livre, true);
+    }
+
+    public int numberOfReservationsDateLimitNull(Livre livre){
+        return this.reservationRepository.countReservationsByLivreAndActifAndDateLimit(livre, true,null);
+    }
+
+    public void setActif(Reservation reservation){
+        reservation.setActif(false);
+    }
+
+    public ReservationDTO conversionToDTO(Reservation reservation){
+        return this.conversionReservation.convertToDto(reservation);
+    }
+
+    public void setNbreReservationsForLivre(Livre livre, String type){
+        this.livreService.setNbreReservations(livre,type);
+    }
+
+    public void deleteReservationIfEmprunt(Livre livre, Usager usager){
+        List<Reservation> r = this.reservationForLivreAndUsager(livre,usager);
+        int nbre = r.size();
+        if(nbre != 0){
+            this.delete(r.get(0));
+        }
+    }
+
+    public int placeIntoListReservations(Long idReservation){
+        try {
+            Reservation reservation = this.findById(idReservation);
+            Livre livre = reservation.getLivre();
+            LocalDateTime dateTime = reservation.getDate();
+            return this.reservationRepository.countReservationByLivreAndActifAndDateLessThan(livre,true,dateTime) + 1;
+        } catch (ResourceNotFoundException e){
+            throw new ResourceNotFoundException("Reservation", "id", idReservation);
+        }
+    }
+
+    public int countReservationsByLivreAndActif(Livre livre){
+        return this.reservationRepository.countReservationsByLivreAndActif(livre,true);
     }
 }

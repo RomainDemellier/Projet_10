@@ -1,10 +1,8 @@
 package com.oc.projets.projet_10.restController;
 
 import com.oc.projets.projet_10.dto.ReservationDTO;
-import com.oc.projets.projet_10.entity.Reservation;
 import com.oc.projets.projet_10.exception.ReservationException;
 import com.oc.projets.projet_10.exception.ResourceNotFoundException;
-import com.oc.projets.projet_10.exception.UsagerException;
 import com.oc.projets.projet_10.service.ReservationService;
 
 import java.util.List;
@@ -15,13 +13,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -49,28 +45,33 @@ public class ReservationController {
         return ResponseEntity.ok(this.reservationService.getAllReservations());
     }
 
+    @GetMapping("/actif")
+    public ResponseEntity<List<ReservationDTO>> getAllReservationsActif(){
+        return ResponseEntity.ok(this.reservationService.getAllReservationsActif());
+    }
+
     @PostMapping("/create")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity create(@RequestBody ReservationDTO reservationDTO){
     	System.out.println("reservation : " + reservationDTO.toString());
         try {
         	
-            ReservationDTO reservationDTO2 = this.reservationService.create(reservationDTO);
+            ReservationDTO reservationDTO2 = this.reservationService.getLivreAndUsagerAndCreate(reservationDTO);
             return ResponseEntity.ok(reservationDTO2);
         } catch (ReservationException e) {
             //TODO: handle exception
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(reservationDTO);
-        } catch (UsagerException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+/*        } catch (UsagerException e) {
 			// TODO: handle exception
-        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad request");
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad request");*/
 		}
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<ReservationDTO> update(@PathVariable(value = "id") Long id){
         try {
-            ReservationDTO reservationDTO = this.reservationService.update(id);
+            ReservationDTO reservationDTO = this.reservationService.findAndUpdate(id);
             return ResponseEntity.ok(reservationDTO);
         } catch (ResourceNotFoundException e) {
             //TODO: handle exception
@@ -85,8 +86,8 @@ public class ReservationController {
         try {
 //            Reservation reservation = this.reservationService.findById(id);
         	System.out.println("Dans Reservation Controller methode delete.");
-            return ResponseEntity.ok(this.reservationService.delete(id));
-        } catch (ReservationException e) {
+            return ResponseEntity.ok(this.reservationService.findAndDelete(id));
+        } catch (ResourceNotFoundException e) {
             //TODO: handle exception
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Imbossible de supprimer cette réservation");
@@ -99,5 +100,15 @@ public class ReservationController {
     public ResponseEntity getReservationDateLimitDepasse() {
     	System.out.println("Dans Réservation Controller getReservationDateLimitDepasse");
     	return ResponseEntity.ok(this.reservationService.getReservationDateLimitDepasse());
+    }
+
+//    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/place/{id}")
+    public ResponseEntity getPlaceIntoListReservations(@PathVariable(value = "id") Long id){
+        try {
+            return ResponseEntity.ok(this.reservationService.placeIntoListReservations(id));
+        } catch (ResourceNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Impossible de calculer la place dans la liste");
+        }
     }
 }

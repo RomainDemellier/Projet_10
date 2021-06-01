@@ -194,4 +194,19 @@ public class UsagerService {
 		
 		return usagers.stream().map(usager -> this.conversionUsager.convertToGetDTO(usager)).collect(Collectors.toList());
 	}
+
+	public UsagerGetDTO update(Long id, UsagerGetDTO usagerGetDTO){
+		Usager usager = this.findById(id);
+		usager.setEmail(usagerGetDTO.getEmail());
+		usager.setRole(usagerGetDTO.getRole());
+		usager.setNom(usagerGetDTO.getNom());
+		usager.setPrenom(usagerGetDTO.getPrenom());
+		usager = this.usagerRepository.save(usager);
+		return this.conversionUsager.convertToGetDTO(usager);
+	}
+
+	public void delete(Long id){
+		Usager usager = this.findById(id);
+		this.usagerRepository.delete(usager);
+	}
 }

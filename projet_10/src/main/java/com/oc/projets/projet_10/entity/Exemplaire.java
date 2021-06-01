@@ -2,15 +2,7 @@ package com.oc.projets.projet_10.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -27,6 +19,7 @@ public class Exemplaire implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
+//	@ManyToOne(cascade = CascadeType.ALL)
 	@ManyToOne
 	@JoinColumn(name = "livre_id", nullable = false)
 	private Livre livre;
@@ -50,6 +43,12 @@ public class Exemplaire implements Serializable {
 	public Exemplaire() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+
+	public Exemplaire(Long id, Livre livre, String etat) {
+		this.id = id;
+		this.livre = livre;
+		this.etat = etat;
 	}
 
 	public Long getId() {

@@ -1,20 +1,16 @@
 package com.oc.projets.projet_10.restController;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.oc.projets.projet_10.conversion.ConversionAuteur;
+import com.oc.projets.projet_10.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.oc.projets.projet_10.conversion.ConversionLivre;
 import com.oc.projets.projet_10.dto.LivreCreationDTO;
@@ -60,9 +56,40 @@ public class LivreController {
 		return ResponseEntity.ok(this.livreService.createLivre(livre));
 	}
 	
-	@PutMapping("/editNbreExemplaires")
+	@PatchMapping("/editNbreExemplaires/{id}")
 	@PreAuthorize("hasAuthority('ADMIN')")
-	public ResponseEntity<LivreDTO> editNbreExemplaires(@RequestBody LivreDTO livreDTO) {
-		return ResponseEntity.ok(this.livreService.editNbreExemplaires(livreDTO));
+	public ResponseEntity<LivreDTO> editNbreExemplaires(@PathVariable(value = "id") Long id, @RequestBody LivreDTO livreDTO) {
+		return ResponseEntity.ok(this.livreService.editNbreExemplaires(id,livreDTO));
+	}
+
+	@GetMapping("/dateRetourPlusProche/{id}")
+	public ResponseEntity<LocalDate> getDateRetourPlusProche(@PathVariable Long id){
+		return ResponseEntity.ok(this.livreService.getDateRetourPlusProche(id));
+	}
+
+	@PutMapping("/update/{id}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<LivreDTO> update(@PathVariable(value = "id") Long id, @RequestBody LivreDTO livreDTO){
+		try {
+			return ResponseEntity.ok(this.livreService.update(id,livreDTO));
+		} catch (Exception e){
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@DeleteMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity delete(@PathVariable(value = "id") Long id){
+		try {
+			this.livreService.delete(id);
+			return ResponseEntity.ok(HttpStatus.OK);
+		} catch (ResourceNotFoundException e){
+			return new ResponseEntity(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@GetMapping("/isReservable/{id}")
+	public ResponseEntity isReservable(@PathVariable(value = "id") Long id){
+		return ResponseEntity.ok((this.livreService.isLivreReservable(id)));
 	}
 }

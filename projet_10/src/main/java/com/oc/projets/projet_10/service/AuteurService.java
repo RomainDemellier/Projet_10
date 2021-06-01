@@ -53,4 +53,16 @@ public class AuteurService {
 		logger.info("Fin de la méthode findAll. Retourne une liste List<AuteurDTO>");
 		return auteurs.stream().map(auteur -> this.conversionAuteur.convertToDTO(auteur)).collect(Collectors.toList());
 	}
+
+	public AuteurDTO update(Long id,AuteurDTO auteurDTO){
+		auteurDTO.setId(id);
+		Auteur auteur = this.conversionAuteur.convertToEntity(auteurDTO);
+		auteur = this.auteurRepository.save(auteur);
+		return this.conversionAuteur.convertToDTO(auteur);
+	}
+
+	public void delete(Long id){
+		Auteur auteur = this.auteurRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Auteur", "id", id));
+		this.auteurRepository.delete(auteur);
+	}
 }

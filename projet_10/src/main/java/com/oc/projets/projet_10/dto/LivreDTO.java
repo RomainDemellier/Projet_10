@@ -1,5 +1,7 @@
 package com.oc.projets.projet_10.dto;
 
+import java.time.LocalDate;
+
 public class LivreDTO {
 
 	private Long id;
@@ -11,8 +13,12 @@ public class LivreDTO {
 	private String genre;
 	
 	private int nbreExemplaires;
-	
-	private Boolean reservable;
+
+	private int nbreTotal;
+
+	private int nbreReservations;
+
+	private LocalDate datePlusProcheRetourPrevue;
 	
 	public LivreDTO() {
 		
@@ -57,19 +63,41 @@ public class LivreDTO {
 	public void setNbreExemplaires(int nbreExemplaires) {
 		this.nbreExemplaires = nbreExemplaires;
 	}
-	
 
-	public Boolean getReservable() {
-		return reservable;
+	public int getNbreTotal() {
+		return nbreTotal;
 	}
 
-	public void setReservable(Boolean reservable) {
-		this.reservable = reservable;
+	public void setNbreTotal(int nbreTotal) {
+		this.nbreTotal = nbreTotal;
+	}
+
+	public LocalDate getDatePlusProcheRetourPrevue() {
+		return datePlusProcheRetourPrevue;
+	}
+
+	public void setDatePlusProcheRetourPrevue(LocalDate datePlusProcheRetourPrevue) {
+		this.datePlusProcheRetourPrevue = datePlusProcheRetourPrevue;
+	}
+
+	public int getNbreReservations() {
+		return nbreReservations;
+	}
+
+	public void setNbreReservations(int nbreReservations) {
+		this.nbreReservations = nbreReservations;
 	}
 
 	@Override
 	public String toString() {
-		return "LivreDTO [id=" + id + ", titre=" + titre + ", auteur=" + auteur + ", genre=" + genre
-				+ ", nbreExemplaires=" + nbreExemplaires + "]";
+		return "LivreDTO{" +
+				"id=" + id +
+				", titre='" + titre + '\'' +
+				", auteur=" + auteur +
+				", genre='" + genre + '\'' +
+				", nbreExemplaires=" + nbreExemplaires +
+				", nbreReservations=" + nbreReservations +
+				", datePlusProcheRetourPrevue=" + datePlusProcheRetourPrevue +
+				'}';
 	}
 }

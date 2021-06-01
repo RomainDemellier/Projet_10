@@ -33,6 +33,12 @@ public class Auteur implements Serializable {
 		// TODO Auto-generated constructor stub
 	}
 
+	public Auteur(Long id, String nom, String prenom) {
+		this.id = id;
+		this.nom = nom;
+		this.prenom = prenom;
+	}
+
 	public Long getId() {
 		return id;
 	}

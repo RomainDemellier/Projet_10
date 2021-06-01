@@ -26,4 +26,11 @@ public class EmailService {
 		//this.javaMailSender = new JavaMailSenderImpl();
 		this.javaMailSender.send(msg);
 	}
+
+	public void sendMailIfStillReservations(Reservation reservation, Boolean isStillReservations){
+		if(isStillReservations){
+			System.out.println("Envoi d'un mail");
+			this.transformReservation(reservation);
+		}
+	}
 }
