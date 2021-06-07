@@ -224,7 +224,6 @@ public class ReservationService {
             System.out.println("isStillReservation : " + isStillReservation);
             this.setDateLimitIfReservation(livre,isStillReservation);
             this.livreService.rendreLivreIfNoReservations(livre,isStillReservation);
-//            int n = this.numberOfReservations(livre);
             this.livreService.editLivre(livre);
             this.sendEmailForReservation(reservation,isStillReservation);
         }
@@ -235,8 +234,8 @@ public class ReservationService {
         if(isStillReservations) {
             List<Reservation> reservations = this.reservationRepository.findReservationsByLivreAndActifAndDateLimitOrderByDateAsc(livre, true, null);
             Reservation reservation = reservations.get(0);
-
             this.findAndUpdate(reservation.getId());
+            this.sendEmailForReservation(reservation);
         }
     }
 
@@ -244,6 +243,10 @@ public class ReservationService {
         if(isStillReservation){
             this.emailService.transformReservation(reservation);
         }
+    }
+
+    public void sendEmailForReservation(Reservation reservation){
+        this.emailService.transformReservation(reservation);
     }
     
     public List<ReservationDTO> getReservationDateLimitDepasse(){

@@ -138,6 +138,7 @@ public class EmpruntService {
 
 		Livre livre = emprunt.getExemplaire().getLivre();
 		Boolean isStillReservations = this.reservationService.isStillReservations(livre);
+		System.out.println("Is reservation : " + isStillReservations);
 		this.reservationService.setDateLimitIfReservation(livre,isStillReservations);
 		
 		logger.info("Fin de la méthode delete. Retourne un EmpruntDTO : " + this.conversionEmprunt.convertToDto(emprunt).toString());
